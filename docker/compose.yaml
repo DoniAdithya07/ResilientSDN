@@ -1,0 +1,11 @@
+services:
+  sdn:
+    build: .
+    image: resilient-sdn:latest
+    privileged: true           # Mininet needs network namespaces, tc, OVS
+    volumes:
+      - ..:/project
+    working_dir: /project
+    environment:
+      PYTHONDONTWRITEBYTECODE: "1"
+      PYTHONPATH: /project

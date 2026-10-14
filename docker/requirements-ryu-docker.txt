@@ -1,0 +1,6 @@
+# Installed into the container's /opt/ryu venv (Python 3.9).
+# Keep in sync with requirements-ryu.txt at the project root.
+ryu==4.34
+eventlet==0.30.2
+networkx>=3.0
+pyyaml>=6.0

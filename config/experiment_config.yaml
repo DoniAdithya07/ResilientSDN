@@ -1,0 +1,25 @@
+# qosentry is left out: it needs a trained policy (see baselines/qosentry_stub.py)
+systems: [static, simple_reactive, resilient_sdn]
+scenarios: [S1, S2, S3, S4, S5, S6, S7, S8, S9, S10, S11]
+topologies: [fat_tree, internet2, geant, nsfnet]
+
+n_runs: 30
+warmup_seconds: 3              # after switches connect, before traffic
+attack_delay_seconds: 10       # legitimate traffic alone before the attack
+duration_seconds: 60           # attack length (S6 overrides with its own)
+results_dir: results
+
+legit:
+  target_flows: 2              # legitimate flows crossing the target link
+  rate_mbps: 10
+  background_flows: 4          # legitimate flows elsewhere in the network
+  background_rate_mbps: 5
+
+bursty:                        # Ablation D: short bursts on the target link
+  burst_mbps: 35               # per legitimate pair; 2 x 35 + 20 = 90% of 100 Mbps
+  burst_seconds: 3             # shorter than N_intervals x polling_interval
+  period_seconds: 12
+
+trace:                         # optional CAIDA/MAWI background (traffic/trace_replay.py)
+  file: null
+  rate_mbps: 5

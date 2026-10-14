@@ -1,0 +1,5 @@
+# Linux controller environment only (runs next to Mininet + Open vSwitch).
+# Ryu is unmaintained and breaks with newer eventlet; use Python 3.9.
+-r requirements.txt
+ryu==4.34
+eventlet==0.30.2

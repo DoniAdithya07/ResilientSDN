@@ -1,0 +1,31 @@
+controller:
+  polling_interval: 2          # seconds between stat polls
+  utilisation_threshold: 0.80  # trigger threshold (80%)
+  safe_threshold: 0.80         # max allowed post-reroute utilisation
+  N_intervals: 3               # consecutive intervals to confirm congestion
+  cooldown_seconds: 30         # minimum time between rerouting events
+  hysteresis_epsilon: 0.05     # DPP deadband threshold
+  dpp_weight_V0: 1.0           # DPP trade-off parameter
+  max_path_hops: 6             # cutoff for candidate path search
+  repeat_attack_window: 120    # seconds; a link attacked again within this uses N-1
+  latency_probe: true          # measure link latency with probe packets
+
+scoring_weights:
+  w1_capacity: 0.40            # residual capacity weight
+  w2_latency: 0.30             # latency weight
+  w3_rule_cost: 0.30           # rule-change penalty weight
+
+adversarial:
+  randomise_N: false           # set true for S10 adversarial scenarios
+  N_min: 2
+  N_max: 5
+  randomise_cooldown: false
+  cooldown_min: 20
+  cooldown_max: 45
+
+# Mechanism switches for the ablation study (all true = full ResilientSDN)
+ablation:
+  capacity_filter: true        # false: any path avoiding the congested link
+  hysteresis: true             # false: no DPP deadband, no cooldown
+  scoring: multi_objective     # or: shortest (lowest-latency alternate)
+  trend_trigger: true          # false: trigger after a single interval (N=1)

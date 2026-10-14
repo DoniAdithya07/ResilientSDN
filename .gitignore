@@ -1,0 +1,16 @@
+# Local scratch (scripts, logs, temp test folders, references)
+.local/
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Generated experiment output (keep the folder, not the data)
+results/*
+!results/.gitkeep
+
+# Private notes and reports (not pushed)
+README_PRIVATE.md
+reports/

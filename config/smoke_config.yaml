@@ -1,0 +1,21 @@
+# Quick end-to-end check, fat_tree, 1 run each (~25 min): python3 -m evaluation.experiment --config config/smoke_config.yaml
+systems: [static, simple_reactive, resilient_sdn]
+scenarios: [S1, S2, S3, S4, S5, S7, S8, S9, S10]
+topologies: [fat_tree]
+n_runs: 1
+warmup_seconds: 3
+attack_delay_seconds: 8
+duration_seconds: 30
+results_dir: results/smoke
+legit:
+  target_flows: 2
+  rate_mbps: 10
+  background_flows: 4
+  background_rate_mbps: 5
+bursty:
+  burst_mbps: 35
+  burst_seconds: 3
+  period_seconds: 12
+trace:
+  file: null
+  rate_mbps: 5

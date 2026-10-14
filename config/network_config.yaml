@@ -1,0 +1,36 @@
+# Link capacities (Mbps) and latencies (ms) per topology.
+
+fat_tree:
+  k: 4
+  core_agg_bw: 100
+  agg_edge_bw: 100
+  edge_host_bw: 100
+  delay_ms: 1
+
+# WAN capacities are scaled so the fastest real link becomes max_link_mbps
+# (Internet2: 100 Gbps -> 100 Mbps; GÉANT: 10 Gbps -> 100 Mbps), keeping the
+# ratios between links. Latency = great-circle distance / fibre_km_per_ms.
+internet2:
+  data: topology/data/internet2_os3e.yaml
+  max_link_mbps: 100
+  host_bw: 100
+  fibre_km_per_ms: 200         # light in fibre ~ 2/3 c
+  max_path_hops: 12            # sparse WAN: detours around one link take up to 9 hops (default 6 finds none)
+
+geant:
+  data: topology/data/Geant2012.graphml
+  max_link_mbps: 100
+  host_bw: 100
+  fibre_km_per_ms: 200
+  default_link_gbps: 10        # 22 lit-fibre core links have no speed in the data
+  missing_coordinates:         # capitals, for the 3 nodes the data has no location for
+    UA: [50.4501, 30.5234]     # Kyiv
+    MD: [47.0105, 28.8638]     # Chisinau
+    BY: [53.9006, 27.5590]     # Minsk
+
+nsfnet:
+  data: topology/data/Nsfnet.graphml
+  max_link_mbps: 100
+  host_bw: 100
+  fibre_km_per_ms: 200
+  default_link_gbps: 10        # the file has no link speeds; all links equal
