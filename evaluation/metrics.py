@@ -119,7 +119,8 @@ def secondary_congestion(events, target, threshold):
     hot = set()
     for e in events:
         if e['kind'] == 'reroute':
-            for a, b in zip(e['new'], e['new'][1:]):
+            # links shared with the old path already carried the flow
+            for a, b in set(zip(e['new'], e['new'][1:])) - set(zip(e['old'], e['old'][1:])):
                 moved_onto.setdefault(f'{a}-{b}', e['t'])
         elif e['kind'] == 'stats':
             hot |= {l for l, u in e['util'].items()

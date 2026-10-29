@@ -29,6 +29,13 @@ def test_secondary_congestion_only_counts_links_flows_were_moved_onto():
     assert metrics.secondary_congestion(ev, 'a-b', 0.8) == 1
 
 
+def test_secondary_congestion_ignores_links_shared_with_the_old_path():
+    ev = [{'t': 1, 'kind': 'reroute', 'flow': 'f', 'old': ['e1', 'a1', 'c1', 'a3', 'e3'],
+           'new': ['e1', 'a2', 'c3', 'a3', 'e3']},
+          stats_event(2, {'a3-e3': 0.95})]  # the flow was already on a3-e3
+    assert metrics.secondary_congestion(ev, 'c1-a3', 0.8) == 0
+
+
 def test_oscillations():
     ev = [{'kind': 'new_flow', 'flow': 'f', 'path': ['a', 'b']},
           {'kind': 'reroute', 'flow': 'f', 'old': ['a', 'b'], 'new': ['a', 'c']},

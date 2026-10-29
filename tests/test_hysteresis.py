@@ -43,6 +43,13 @@ def test_counts_reroutes_and_oscillations(config, clock):
     assert h.get_reroute_count('unknown') == 0
 
 
+def test_return_to_the_initial_path_is_an_oscillation(config, clock):
+    h = HysteresisManager(config, clock=clock)
+    h.record_reroute(FLOW, 1.0, ['A', 'C', 'D'], old_path=['A', 'B', 'D'])
+    h.record_reroute(FLOW, 1.0, ['A', 'B', 'D'], old_path=['A', 'C', 'D'])
+    assert h.get_oscillation_count(FLOW) == 1
+
+
 def test_time_since_last_reroute(config, clock):
     h = HysteresisManager(config, clock=clock)
     assert h.get_time_since_last_reroute(FLOW) == float('inf')

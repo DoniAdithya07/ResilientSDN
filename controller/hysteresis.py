@@ -35,14 +35,16 @@ class HysteresisManager:
         last = self.last_reroute_time.get(flow_id)
         return last is None or self.clock() - last >= self.cooldown
 
-    def record_reroute(self, flow_id, new_dpp, new_path=None):
-        """Record that a rerouting event occurred."""
+    def record_reroute(self, flow_id, new_dpp, new_path=None, old_path=None):
+        """Record that a rerouting event occurred. old_path seeds the history on the first
+        reroute, so a return to the flow's initial path counts as an oscillation."""
         self.last_reroute_time[flow_id] = self.clock()
         self.current_dpp[flow_id] = new_dpp
         self.reroute_counts[flow_id] = self.reroute_counts.get(flow_id, 0) + 1
         if new_path is not None:
             new_path = tuple(new_path)
-            history = self.path_history.setdefault(flow_id, [])
+            history = self.path_history.setdefault(
+                flow_id, [tuple(old_path)] if old_path is not None else [])
             if new_path in history:
                 self.oscillations[flow_id] = self.oscillations.get(flow_id, 0) + 1
             history.append(new_path)

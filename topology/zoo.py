@@ -75,6 +75,14 @@ def read_zoo(path, cfg):
     return {names[n]: coords[n] for n in ids}, links
 
 
+def _find_graphml(name):
+    """Path of the .graphml file in DATA_DIR whose stem matches `name`, case-insensitively."""
+    for p in DATA_DIR.glob('*.graphml'):
+        if p.stem.lower() == name:
+            return p
+    raise FileNotFoundError(f'{DATA_DIR}: no .graphml file for topology {name!r}')
+
+
 def detour_hops(graph):
     """Longest shortest-detour around a single link (a bound for the controller's path search)."""
     worst = 2
@@ -94,7 +102,12 @@ class ZooTopology(WanTopology):
         section = self.SECTION or name
         cfg = dict(DEFAULTS)
         cfg.update(load_yaml(config_path).get(section) or {})
-        path = PROJECT_ROOT / cfg['data'] if 'data' in cfg else DATA_DIR / (self.FILE or f'{name}.graphml')
+        if 'data' in cfg:
+            path = PROJECT_ROOT / cfg['data']
+        elif self.FILE:
+            path = DATA_DIR / self.FILE
+        else:
+            path = _find_graphml(name)
         nodes, links = read_zoo(path, cfg)
         super().__init__(nodes, links, cfg)
         if not self.SECTION:   # added topologies: bound for the controller's candidate-path search

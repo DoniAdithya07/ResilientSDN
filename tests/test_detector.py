@@ -26,6 +26,16 @@ def test_drop_below_threshold_resets_counter(config, clock):
     assert det.update(stats(0.9)) == [LINK]
 
 
+def test_absent_interval_resets_counter(config, clock):
+    det = CongestionDetector(config, clock=clock)
+    det.update(stats(0.9))
+    det.update(stats(0.9))
+    det.update({})  # link missing from this poll breaks the consecutive run
+    assert det.update(stats(0.9)) == []
+    assert det.update(stats(0.9)) == []
+    assert det.update(stats(0.9)) == [LINK]
+
+
 def test_exactly_threshold_is_not_high(config, clock):
     det = CongestionDetector(config, clock=clock)
     for _ in range(5):

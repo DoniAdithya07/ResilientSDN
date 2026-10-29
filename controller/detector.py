@@ -29,6 +29,8 @@ class CongestionDetector:
 
         triggered = []
         now = self.clock()
+        for link in self.counters.keys() - link_stats.keys():
+            self.counters[link] = 0  # absent this interval: the run is no longer consecutive
         for link, stats in link_stats.items():
             high = stats['utilisation'] > self.threshold
             self.history.setdefault(

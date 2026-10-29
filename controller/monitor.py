@@ -67,7 +67,9 @@ class NetworkMonitor:
             link = (sw, self.port_to_neighbour.get(key))
             if prev is None or link not in self.capacity or t <= prev[1]:
                 continue
-            rate = (stat.tx_bytes - prev[0]) / (t - prev[1])
+            # tx_bytes can be reset by the switch/driver independently of duration (e.g. a port-stat
+            # counter wrap or reset event); clamp so a decrease never reports a negative load.
+            rate = max(0.0, (stat.tx_bytes - prev[0]) / (t - prev[1]))
             cap = self.capacity[link]
             self.link_stats[link] = {'bytes_per_sec': rate, 'capacity': cap,
                                      'utilisation': rate / cap}
@@ -85,9 +87,14 @@ class NetworkMonitor:
             t = stat.duration_sec + stat.duration_nsec / 1e9
             prev = self._flow_prev.get((sw, flow_id))
             self._flow_prev[(sw, flow_id)] = (stat.byte_count, t)
-            rate = self.flow_stats.get(flow_id, {}).get('rate', 0.0)
-            if prev is not None and t > prev[1]:
+            if prev is not None and t > prev[1] and stat.byte_count >= prev[0]:
                 rate = (stat.byte_count - prev[0]) / (t - prev[1])
+            else:
+                # first sighting, or the switch replaced this flow's entry on a reroute (bytes
+                # restart; duration restarts too, but may still exceed a young entry's). Either way the previous
+                # rate no longer describes this entry, so report "no data yet" instead of
+                # carrying over a stale value from before the reset.
+                rate = 0.0
             self.flow_stats[flow_id] = {'bytes': stat.byte_count,
                                         'packets': stat.packet_count,
                                         'rate': rate}

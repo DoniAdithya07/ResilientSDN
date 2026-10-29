@@ -170,6 +170,7 @@ class ExperimentRunner:
         hops = getattr(load_topology(topology), 'max_path_hops', None)
         if hops:   # per-topology detour limit (sparse WANs need more than the default of 6)
             ctrl_cfg['controller']['max_path_hops'] = hops
+        ctrl_cfg['controller']['seed'] = f'{topology}-{scenario}-{run_id}'  # same draws for every system
         (run_dir / 'controller_config.yaml').write_text(yaml.safe_dump(ctrl_cfg))
 
         seconds = SCENARIOS[s_id].get('duration', self.cfg['duration_seconds'])

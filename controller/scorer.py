@@ -51,9 +51,13 @@ class PathScorer:
         comparable with hysteresis_epsilon. The current path is scored with
         traffic_to_move = 0 (its load already includes the flow) and K = 0.
         """
+        # A link can be briefly absent from link_stats (not polled yet at startup, or one dropped
+        # OFPPortStatsReply) even on the path currently carrying the flow; skip it from the drift sum
+        # rather than raising, which would otherwise discard the whole interval's reroute decisions
+        # (routing_base's blanket except swallows it) instead of just this one flow's.
         drift = sum(
-            (self.link_stats[l]['bytes_per_sec'] + traffic_to_move) / self.link_stats[l]['capacity']
-            for l in path_links(path))
+            (stats['bytes_per_sec'] + traffic_to_move) / stats['capacity']
+            for l in path_links(path) for stats in (self.link_stats.get(l),) if stats is not None)
         return -drift - self.V0 * self._normalised_rule_cost(path, current_path)
 
     def _capacity_score(self, path, traffic_to_move) -> float:
@@ -64,7 +68,9 @@ class PathScorer:
         """
         worst_post = 0.0
         for link in path_links(path):
-            stats = self.link_stats[link]
+            stats = self.link_stats.get(link)
+            if stats is None:   # not polled yet / dropped reply this round: see dpp_score
+                continue
             post = (stats['bytes_per_sec'] + traffic_to_move) / stats['capacity']
             worst_post = max(worst_post, post)
         return max(0.0, 1.0 - worst_post)

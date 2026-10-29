@@ -75,6 +75,14 @@ def test_flow_rate_only_counted_at_first_switch(ctl):
     assert ('a1', '10.0.0.1->10.0.0.5') not in m._flow_prev
 
 
+def test_byte_counter_reset_with_advancing_duration_gives_no_rate(ctl):
+    # a reroute replaced a young entry: duration still moved forward but bytes restarted
+    m = NetworkMonitor(ctl, NS())
+    m.on_flow_stats_reply(flow_reply(ctl, 'e1', 1_000_000, 1))
+    m.on_flow_stats_reply(flow_reply(ctl, 'e1', 5_000, 2))
+    assert m.get_flow_rate('10.0.0.1->10.0.0.5') == 0.0
+
+
 def test_table_miss_and_other_priorities_ignored(ctl):
     m = NetworkMonitor(ctl, NS())
     m.on_flow_stats_reply(flow_reply(ctl, 'e1', 0, 10, priority=0))

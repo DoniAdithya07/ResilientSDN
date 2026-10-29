@@ -10,6 +10,8 @@ later decisions in the same round see where earlier flows went.
 Ablation switches (config `ablation:`) turn single mechanisms off.
 """
 
+import random
+
 from controller.detector import CongestionDetector
 from controller.hysteresis import HysteresisManager
 from controller.path_engine import PathEngine, path_links
@@ -37,10 +39,11 @@ class ResilientSDN(RoutingBase):
         self.relief_bypass = getattr(cfg, 'relief_bypass', False)   # ResilientSDN v2, see hysteresis.py
         if not ablation.get('trend_trigger', True):
             cfg.N_intervals = 1
-        self.detector = CongestionDetector(cfg)
+        rng = random.Random(getattr(cfg, 'seed', None))  # seeded per run so S10 is reproducible
+        self.detector = CongestionDetector(cfg, rng=rng)
         self.path_engine = PathEngine(self.graph, cfg)
         self.scorer = PathScorer(cfg)
-        self.hysteresis = HysteresisManager(cfg)
+        self.hysteresis = HysteresisManager(cfg, rng=rng)
         self.log_event('config', ablation=ablation, N=cfg.N_intervals)
 
     def on_interval(self, link_stats):
@@ -100,7 +103,7 @@ class ResilientSDN(RoutingBase):
 
         if not self.set_path(flow, best, reason=f'congestion on {link_key(link)}'):
             return False
-        self.hysteresis.record_reroute(flow.id, new_dpp, best)
+        self.hysteresis.record_reroute(flow.id, new_dpp, best, old_path=current)
         move_load(projected, current, -traffic)
         move_load(projected, best, traffic)
         return True
