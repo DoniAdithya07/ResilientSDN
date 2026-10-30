@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ResilientSDN — Replay</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="topbar">
+    <h1>ResilientSDN replay</h1>
+    <p class="subtitle">Watch target-link utilization and controller reroutes for one recorded run.</p>
+  </header>
+
+  <main>
+    <div id="backendError" class="banner banner-error" role="alert" hidden>
+      Can't reach the backend yet. Start the server, then
+      <button type="button" id="retryBtn" class="link-btn">try again</button>.
+    </div>
+
+    <section class="controls" aria-label="Run controls">
+      <label for="runSelect">Run</label>
+      <select id="runSelect" disabled>
+        <option value="">Loading runs…</option>
+      </select>
+
+      <span class="speed-group" role="group" aria-label="Replay speed">
+        <button type="button" class="speed-btn" data-speed="1">1x</button>
+        <button type="button" class="speed-btn" data-speed="10">10x</button>
+        <button type="button" class="speed-btn is-active" data-speed="20">20x</button>
+        <button type="button" class="speed-btn" data-speed="50">50x</button>
+      </span>
+
+      <button type="button" id="playBtn" class="play-btn" disabled>Play</button>
+      <span id="playState" class="play-state">Pick a run to start</span>
+    </section>
+
+    <section class="summary" id="summary" aria-live="polite">
+      <dl>
+        <div><dt>System</dt><dd id="sumSystem">—</dd></div>
+        <div><dt>Scenario</dt><dd id="sumScenario">—</dd></div>
+        <div><dt>Target link</dt><dd id="sumLink">—</dd></div>
+        <div><dt>Threshold</dt><dd id="sumThreshold">—</dd></div>
+        <div><dt>Reroutes seen</dt><dd id="sumReroutes">0</dd></div>
+      </dl>
+    </section>
+
+    <section class="chart-wrap">
+      <canvas id="utilChart" height="320" aria-label="Utilization over time chart" role="img"></canvas>
+    </section>
+
+    <section class="log" aria-label="Reroute events">
+      <h2>Reroute log</h2>
+      <ul id="rerouteLog" class="log-list">
+        <li class="log-empty">No reroutes yet.</li>
+      </ul>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

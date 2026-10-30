@@ -2144,8 +2144,17 @@ dialog.sheet[open] { animation-name: sheet-in; }
     <button type="button" class="btn" id="glossary-close">Close</button>
   </div>
   <dl class="gloss">
-    <dt>S1</dt><dd>The test without an attack: normal traffic only. Shows what each system costs on a quiet network.</dd>
-    <dt>S3</dt><dd>The test with an attack: one host floods one link with 70 Mbit/s of junk traffic.</dd>
+    <dt>S1</dt><dd>No attack: normal traffic only. Shows what each system costs on a quiet network.</dd>
+    <dt>S2</dt><dd>Low single attacker: one host floods one link with 30 Mbit/s of junk traffic.</dd>
+    <dt>S3</dt><dd>High single attacker: one host floods one link with 70 Mbit/s of junk traffic.</dd>
+    <dt>S4</dt><dd>Distributed 3x: three hosts each flood the link with 20 Mbit/s.</dd>
+    <dt>S5</dt><dd>Heavy 5x: five hosts each flood the link with 15 Mbit/s.</dd>
+    <dt>S6</dt><dd>Sustained 10min: three attackers at 30 Mbit/s each, kept up for 10 minutes instead of the usual 60s.</dd>
+    <dt>S11</dt><dd>Overload 2min: same attack as S6 (three attackers, 30 Mbit/s each) but only 2 minutes, for quicker runs.</dd>
+    <dt>S7</dt><dd>Threshold evasion: attack load alternates high/low every 4s so the link is never over the limit for long enough to trigger a reroute.</dd>
+    <dt>S8</dt><dd>Cooldown exploit: an 8s burst at 90% load every 31s, timed to land right after the controller's 30s cooldown ends.</dd>
+    <dt>S9</dt><dd>Capacity presaturation: first loads the backup paths to 79% so they look almost full, then attacks at 90% — there is nowhere safe left to reroute to.</dd>
+    <dt>S10</dt><dd>Randomised thresholds: a random mix of S7, S8 or S9 each run, so the controller cannot be tuned to one fixed pattern.</dd>
     <dt>Congestion</dt><dd>A link carrying so much traffic that packets queue up or get lost; here it means the link is above the 0.8 limit.</dd>
     <dt>The 0.8 limit</dt><dd>The dashed line in the link graph: a link using 80% or more of its capacity counts as congested.</dd>
     <dt>Reroute</dt><dd>The controller moves a flow (one host-to-host conversation) onto a different path to get it off a busy link.</dd>
