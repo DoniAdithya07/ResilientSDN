@@ -2265,7 +2265,9 @@ function hatchDefs(svgNode, id) {
 function niceStep(span, px, minPx) {
   const raw = span / Math.max(1, px / (minPx || 70));
   for (const s of [5, 10, 20, 30, 60, 120, 300, 600, 1200]) if (s >= raw) return s;
-  return 1800;
+  let s = 1800;
+  while (s < raw) s *= 2;   // never more labels than fit, however long the span
+  return s;
 }
 function boxSize(node) { return {w: node.clientWidth, h: node.clientHeight}; }
 // Tooltips: title for the mouse, data-tip for a keyboard-focus bubble (CSS), and
@@ -2875,14 +2877,17 @@ function drawAll() {
     try { f(); } catch (err) { console.error(err); }
   }
 }
-function domainX() {   // shared x axis of the link chart and the timeline: 0-80 s, grows
+const MAX_RUN_SPAN = 1800;   // s; the longest run (S6) lasts ~620 s, so anything longer is a stale/unfinished run
+function domainX(runs) {   // x axis (0-80 s, grows) of the runs actually drawn, not of every run in the folder
   let maxX = 80;
-  for (const r of S.runs.values()) {
-    if (r.t0 === null) continue;
+  for (const r of runs) {
+    if (!r || r.t0 === null) continue;
+    const spans = [];
     const end = nowFor(r);
-    if (end !== null) maxX = Math.max(maxX, end - r.t0);
+    if (end !== null) spans.push(end - r.t0);
     const w = windows(r);
-    if (w.aEnd !== null) maxX = Math.max(maxX, w.aEnd - r.t0 + w.tm.clean);
+    if (w.aEnd !== null) spans.push(w.aEnd - r.t0 + w.tm.clean);
+    for (const s of spans) if (s <= MAX_RUN_SPAN) maxX = Math.max(maxX, s);
   }
   return Math.ceil(maxX / 20) * 20;
 }
@@ -2912,7 +2917,7 @@ function drawLink() {
   const hatch = hatchDefs(node, 'hatch-link');
   const m = {l: 36, r: 150, t: 24, b: 24};
   const pw = w - m.l - m.r, ph = h - m.t - m.b;
-  const xmax = domainX();
+  const xmax = domainX([r]);
   const X = (x) => m.l + Math.max(0, Math.min(xmax, x)) / xmax * pw;
   const Y = (v) => m.t + (1 - Math.max(0, Math.min(1, v))) * ph;
   linkView.geom = {m, pw, ph, X, xmax};
@@ -3276,7 +3281,7 @@ function drawTimeline() {
   const m = {l: labelW, r: 12, t: 4, b: 26};
   const pw = w - m.l - m.r, ph = h - m.t - m.b;
   const rows = timelineRows(Math.max(1, Math.floor(ph / 20)));
-  const xmax = domainX();
+  const xmax = domainX(rows.map((name) => S.runs.get(name)));
   const X = (x) => m.l + Math.max(0, Math.min(xmax, x)) / xmax * pw;
   const step = niceStep(xmax, pw);
   for (let x = 0; x <= xmax + 0.001; x += step) {

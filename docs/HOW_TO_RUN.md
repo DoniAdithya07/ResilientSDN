@@ -1,6 +1,6 @@
 # How to run ResilientSDN: full process and demo
 
-Author: Doni Adithya. Everything runs on one Windows laptop: the network emulator and controller run in
+Authors: A. Doni Adithya (23bds007), B. Harsha Vardhan (23bds015), E. Hari Teja (23bds019), K. Ram Charan (23bds029), L. Sahith Akash Manikanta (23bds031), Y. Mahesh (23bcs136), Indian Institute of Information Technology Dharwad. Everything runs on one Windows laptop: the network emulator and controller run in
 WSL2 Ubuntu 24.04, and the analysis and PDF reports run in the Windows Python environment (`.venv`).
 Docker Desktop is **not** used; keep it closed while running (it shares the Linux kernel with WSL).
 

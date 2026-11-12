@@ -18,12 +18,20 @@ SYSTEM_COLORS = {
     'rsdn_no_hysteresis': '#008300',     # green
     'rsdn_shortest': '#4a3aa7',          # violet
     'rsdn_single_threshold': '#e34948',  # red
+    'static_ecmp': '#0e7c5a',            # dark aqua (static family)
+    'rsdn_no_capacity_filter': '#b5651d',  # brown
+    'rsdn_norm_drift': '#5b8fd9',        # light blue (ResilientSDN family)
+    'rsdn_gate_all': '#2f6db5',          # mid blue (ResilientSDN family, revision 2)
+    'rsdn_sequential_only': '#c9a227',   # ochre (revision 2)
 }
 SYSTEM_LABELS = {
     'resilient_sdn': 'ResilientSDN', 'simple_reactive': 'Simple reactive',
     'static': 'Static', 'qosentry': 'QoSentry', 'rsdn_relief_bypass': 'Relief bypass (experimental)',
     'rsdn_capacity_only': 'Capacity filter only', 'rsdn_no_hysteresis': 'No hysteresis',
     'rsdn_shortest': 'Shortest alternate', 'rsdn_single_threshold': 'Single threshold',
+    'static_ecmp': 'Static ECMP', 'rsdn_no_capacity_filter': 'No capacity filter',
+    'rsdn_norm_drift': 'Normalised drift',
+    'rsdn_gate_all': 'Gate all candidates', 'rsdn_sequential_only': 'One-at-a-time only',
 }
 SYSTEM_ORDER = list(SYSTEM_COLORS)
 TEXT, TEXT_2, GRID = '#0b0b0b', '#52514e', '#e6e5e1'

@@ -35,7 +35,7 @@ from controller.config import load_yaml  # noqa: E402
 from evaluation.metrics import read_events  # noqa: E402
 from topology import load_topology  # noqa: E402
 
-AUTHOR = 'Doni Adithya'
+AUTHOR = 'A. Doni Adithya (23bds007), B. Harsha Vardhan (23bds015), E. Hari Teja (23bds019), K. Ram Charan (23bds029), L. Sahith Akash Manikanta (23bds031), Y. Mahesh (23bcs136), Indian Institute of Information Technology Dharwad'
 SS = getSampleStyleSheet()
 P = ParagraphStyle('p', parent=SS['BodyText'], fontSize=9.5, leading=13.5, spaceAfter=5)
 H1 = ParagraphStyle('h1', parent=SS['Heading1'], fontSize=15, spaceBefore=10, spaceAfter=6)

@@ -70,3 +70,16 @@ def test_per_flow_rate():
     # 85% of 100 Mbps with 20 Mbps legit -> 65 Mbps over 3 flows
     assert per_flow_mbps(85, 100, 20, 3) == pytest.approx(65 / 3)
     assert per_flow_mbps(10, 100, 20, 3) == 0
+
+
+def test_ecmp_aware_attacker_hits_the_target_under_static_and_ecmp_routing():
+    """Revision 2: with ecmp_aware, legitimate and attack pairs cross the target under both static
+    and static-ECMP routing, background pairs under neither, so every system faces the same attack."""
+    p = TrafficPlanner(load_topology('fat_tree'), ecmp_aware=True)
+    for sid in ('S3', 'S5', 'S11'):
+        plan = p.plan(sid, LEGIT, random.Random(1))
+        t = plan['target_link']
+        for pair in plan['legit'] + plan['attack']:
+            assert t in path_links(p.paths[pair]) and t in path_links(p.ecmp_paths[pair])
+        for pair in plan['background']:
+            assert t not in path_links(p.paths[pair]) and t not in path_links(p.ecmp_paths[pair])

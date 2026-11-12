@@ -16,6 +16,9 @@ class PathScorer:
         self.w2 = config.scoring_weights['w2_latency']
         self.w3 = config.scoring_weights['w3_rule_cost']
         self.V0 = config.dpp_weight_V0
+        # Revision-1 variant (off by default): divide the drift by the number of links, so a
+        # longer detour is not penalised for its length alone (reviewer suggestion).
+        self.normalise_drift = getattr(config, 'dpp_normalise_by_length', False)
         self.link_stats = link_stats or {}
 
     def update_stats(self, link_stats):
@@ -55,9 +58,11 @@ class PathScorer:
         # OFPPortStatsReply) even on the path currently carrying the flow; skip it from the drift sum
         # rather than raising, which would otherwise discard the whole interval's reroute decisions
         # (routing_base's blanket except swallows it) instead of just this one flow's.
-        drift = sum(
-            (stats['bytes_per_sec'] + traffic_to_move) / stats['capacity']
-            for l in path_links(path) for stats in (self.link_stats.get(l),) if stats is not None)
+        terms = [(stats['bytes_per_sec'] + traffic_to_move) / stats['capacity']
+                 for l in path_links(path) for stats in (self.link_stats.get(l),) if stats is not None]
+        drift = sum(terms)
+        if self.normalise_drift and terms:
+            drift /= len(terms)
         return -drift - self.V0 * self._normalised_rule_cost(path, current_path)
 
     def _capacity_score(self, path, traffic_to_move) -> float:

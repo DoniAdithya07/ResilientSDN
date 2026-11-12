@@ -11,23 +11,34 @@ import networkx as nx
 
 from attack import adversarial
 from attack.scenarios import SCENARIOS
-from controller.path_engine import path_links
+from controller.path_engine import ecmp_choice, path_links
 from traffic.legitimate import udp_flow
 
 
 class TrafficPlanner:
     """Chooses the target link and the host pairs for every kind of flow."""
 
-    def __init__(self, topo):
+    def __init__(self, topo, ecmp_aware=False):
+        """ecmp_aware (revision 2): the attacker also maps the static ECMP routing (as Crossfire
+        would with traceroute) and uses only pairs whose route crosses the target under BOTH static
+        single-path and ECMP routing, so every system faces identical traffic that hits the target."""
         self.topo = topo
         self.g = topo.get_switch_graph()
-        self.switch_of = {v['name']: v['switch'] for v in topo.host_info().values()}
+        info = topo.host_info()
+        self.switch_of = {v['name']: v['switch'] for v in info.values()}
+        self.ip_of = {v['name']: ip for ip, v in info.items()}
+        self.ecmp_aware = ecmp_aware
         self.paths = {}  # {(src host, dst host): static switch path}
+        self.ecmp_paths = {}  # {(src host, dst host): path chosen by the static ECMP baseline}
         for s in topo.hosts():
             for d in topo.hosts():
                 if self.switch_of[s] != self.switch_of[d]:
                     self.paths[(s, d)] = nx.shortest_path(
                         self.g, self.switch_of[s], self.switch_of[d], weight='latency')
+                    if ecmp_aware:
+                        self.ecmp_paths[(s, d)] = ecmp_choice(
+                            self.g, self.switch_of[s], self.switch_of[d],
+                            f'{self.ip_of[s]}->{self.ip_of[d]}')
 
     def choose_target_link(self):
         """Most-used directed link under static routing that is one of the
@@ -46,7 +57,8 @@ class TrafficPlanner:
         bw = self.g.edges[link]['bw']
         return sorted(p for p, path in self.paths.items()
                       if link in path_links(path)
-                      and min(self.g.edges[l]['bw'] for l in path_links(path)) >= bw)
+                      and min(self.g.edges[l]['bw'] for l in path_links(path)) >= bw
+                      and (not self.ecmp_aware or link in path_links(self.ecmp_paths[p])))
 
     def pick(self, candidates, n, used, rng):
         """n pairs, preferring sources and destinations not used yet."""
@@ -69,7 +81,9 @@ class TrafficPlanner:
         used = set()
         legit = self.pick(crossing, legit_cfg['target_flows'], used, rng)
         used |= set(legit)
-        others = [p for p in self.paths if p not in crossing]
+        others = [p for p in self.paths if p not in crossing and not (
+            self.ecmp_aware and (target in path_links(self.paths[p])
+                                 or target in path_links(self.ecmp_paths[p])))]
         background = self.pick(others, legit_cfg['background_flows'], used, rng)
         used |= set(background)
         attack = self.pick(crossing, s.get('attackers', 0), used, rng)

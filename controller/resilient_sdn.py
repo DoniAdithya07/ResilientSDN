@@ -37,6 +37,7 @@ class ResilientSDN(RoutingBase):
         self.use_hysteresis = ablation.get('hysteresis', True)
         self.use_scoring = ablation.get('scoring', 'multi_objective') == 'multi_objective'
         self.relief_bypass = getattr(cfg, 'relief_bypass', False)   # ResilientSDN v2, see hysteresis.py
+        self.gate_all = getattr(cfg, 'dpp_gate_all_candidates', False)   # revision-2 variant
         if not ablation.get('trend_trigger', True):
             cfg.N_intervals = 1
         rng = random.Random(getattr(cfg, 'seed', None))  # seeded per run so S10 is reproducible
@@ -85,6 +86,18 @@ class ResilientSDN(RoutingBase):
             return False
 
         latency = self._latency()
+        if self.gate_all and self.use_hysteresis:
+            # revision-2 variant: the deadband (11) filters every candidate before the score (9)
+            self.scorer.update_stats(projected)
+            cur = self.scorer.dpp_score(current, 0, current)
+            self.scorer.update_stats(without)
+            dpp = {tuple(p): self.scorer.dpp_score(p, traffic, current) for p in candidates}
+            gated = [p for p in candidates if dpp[tuple(p)] - cur > self.hysteresis.epsilon]
+            if not gated:
+                self.log_event('held', flow=flow.id, new_dpp=round(max(dpp.values()), 4),
+                               current_dpp=round(cur, 4), gated=len(candidates))
+                return False
+            candidates = gated
         self.scorer.update_stats(without)
         if self.use_scoring:
             best = self.scorer.rank_candidates(candidates, traffic, current, latency)[0][0]

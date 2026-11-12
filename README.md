@@ -3,6 +3,9 @@
 Congestion-attack-aware rerouting for SDN, compared with static routing and a simple reactive controller, on
 four topologies (fat-tree, Internet2, GEANT, NSFNET) and eleven attack scenarios, using Mininet, Open vSwitch and Ryu.
 
+**Reproduce the paper:** see [REPRODUCE.md](REPRODUCE.md) (install with `sudo sh setup_wsl.sh`, run `./run_full.sh`,
+then `python3 paper/make_assets.py` and `latexmk -pdf` in `paper/`).
+
 **Run it:** see [docs/HOW_TO_RUN.md](docs/HOW_TO_RUN.md): a 6-minute live demo (`./demo.sh`) and the full
 17-19 hour evaluation (`./run_full.sh`).
 

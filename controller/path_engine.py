@@ -91,3 +91,11 @@ class PathEngine:
         to_place = min(traffic_to_move, total_residual)
         return {path: (residual / total_residual) * to_place
                 for path, residual in residuals.items()}
+
+
+def ecmp_choice(graph, src, dst, key):
+    """Deterministic ECMP (static ECMP baseline, revision 1): one of the equal-cost minimum-latency
+    paths, chosen by a hash of the flow key, so the same flow always gets the same path."""
+    import zlib
+    paths = sorted(nx.all_shortest_paths(graph, src, dst, weight='latency'))
+    return paths[zlib.crc32(key.encode()) % len(paths)]

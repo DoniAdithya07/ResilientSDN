@@ -98,3 +98,17 @@ DETOUR = ['A', 'P', 'Q', 'R', 'S', 'T', 'C']
 def test_sum_drift_penalises_a_long_detour_even_when_it_avoids_a_hot_link(config):
     s = PathScorer(config, long_detour_stats())     # default dpp_term = 'sum': the published behaviour
     assert s.dpp_score(DETOUR, 0, CUR) < s.dpp_score(CUR, 0, CUR)
+
+
+def test_normalised_drift_is_the_mean_link_utilisation(config):
+    """Revision-1 variant: drift divided by the number of links (K = 0 on the current path)."""
+    config.dpp_normalise_by_length = True
+    s = PathScorer(config, long_detour_stats())
+    assert s.dpp_score(CUR, 0, CUR) == pytest.approx(-(0.1 + 0.95) / 2)
+    k = s._normalised_rule_cost(DETOUR, CUR)
+    assert s.dpp_score(DETOUR, 0, CUR) == pytest.approx(-0.25 - config.dpp_weight_V0 * k)
+
+
+def test_normalised_drift_is_off_by_default(config):
+    s = PathScorer(config, long_detour_stats())
+    assert s.dpp_score(CUR, 0, CUR) == pytest.approx(-(0.1 + 0.95))

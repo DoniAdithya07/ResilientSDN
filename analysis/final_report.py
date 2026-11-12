@@ -31,7 +31,7 @@ def main_parts():
     """Results folders with the 3-system campaigns: every results/*/all_results.csv except ablations and tests."""
     return [d.name for d in sorted((ROOT / 'results').iterdir())
             if (d / 'all_results.csv').exists() and not d.name.startswith(('ablation', 'nsfnet_test', 'qa_'))
-            and d.name not in SKIP]
+            and d.name not in SKIP and not d.name.endswith('_demo')]
 ABLATION = {
     'A': ('Capacity filter', 'simple_reactive', 'rsdn_capacity_only', 'secondary_congestion',
           'other links pushed over the threshold'),
@@ -174,10 +174,10 @@ def findings(df):
     if len(cdf) and 'recovery_time_s' in cdf:
         firstdip = ', '.join(f'{LABEL(s)} {f(cdf[cdf.system == s].recovery_time_s.mean(), "{:.1f}")} s'
                              for s in SYS3)
-        out.append('<b>Disclosure about the metrics.</b> Time above threshold and stable recovery were defined '
-                   'after the campaign started, because the original first-dip recovery time rewards controllers '
-                   'that flap (this flaw was logged before any results existed). The first-dip values are kept '
-                   f'in the data: {firstdip}.')
+        out.append('<b>Disclosure about the metrics.</b> Time above threshold and stable recovery replaced the '
+                   'original first-dip recovery time during development, before this campaign was run, because the '
+                   'first-dip time rewards controllers that flap (the first brief dip below the threshold counts as '
+                   f'recovery). The first-dip values are kept in the data (mean, congested cases): {firstdip}.')
     return out
 
 

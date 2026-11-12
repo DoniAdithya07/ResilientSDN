@@ -36,6 +36,7 @@ APPS = {
     'simple_reactive': 'baselines/simple_reactive.py',
     'resilient_sdn': 'controller/resilient_sdn.py',
     'qosentry': 'baselines/qosentry_stub.py',
+    'static_ecmp': 'baselines/ecmp_static.py',   # revision 1: ECMP static baseline
 }
 # Extra system names: {name: (app key, controller config overrides)}.
 # evaluation/ablation.py adds the ablation variants here.
@@ -43,6 +44,17 @@ VARIANTS = {
     # EXPERIMENTAL, NOT ADOPTED (negative result, docs/PROGRESS.md): a flow leaving a congested link is not
     # held by the DPP deadband. Fixed Internet2 S11 time-above-threshold but raised secondary congestion in S3.
     'rsdn_relief_bypass': ('resilient_sdn', {'controller': {'relief_bypass': True}}),
+    # Revision 1 (reviewer requests): leave-one-out without the capacity filter; the score
+    # ablation on the backbones; and path-length-normalised drift as a candidate fix.
+    'rsdn_no_capacity_filter': ('resilient_sdn', {'ablation': {'capacity_filter': False}}),
+    'rsdn_shortest': ('resilient_sdn', {'ablation': {'scoring': 'shortest'}}),
+    'rsdn_norm_drift': ('resilient_sdn', {'controller': {'dpp_normalise_by_length': True}}),
+    # Revision 2 (reviewer requests): apply the DPP deadband to every candidate before the score
+    # instead of only to the best-scoring path; and one-at-a-time moves with projected loads as the
+    # only mechanism (ablation A without the capacity filter), to separate the two parts of ablation A.
+    'rsdn_gate_all': ('resilient_sdn', {'controller': {'dpp_gate_all_candidates': True}}),
+    'rsdn_sequential_only': ('resilient_sdn', {'ablation': {
+        'hysteresis': False, 'scoring': 'shortest', 'trend_trigger': False, 'capacity_filter': False}}),
 }
 
 LEGIT_PORT, BURST_PORT, BACKGROUND_PORT, ATTACK_PORT = 5201, 5251, 5301, 5401
@@ -190,7 +202,7 @@ class ExperimentRunner:
             topo.start()
             net = topo.net
             net.waitConnected()
-            plan = TrafficPlanner(topo).plan(s_id, legit, rng)
+            plan = TrafficPlanner(topo, ecmp_aware=getattr(self, 'ecmp_attacker', False)).plan(s_id, legit, rng)
 
             legit_ports = [LEGIT_PORT + i for i in range(len(plan['legit']))]
             burst_ports = [BURST_PORT + i for i in range(len(plan['legit']))]
@@ -244,6 +256,7 @@ class ExperimentRunner:
                 'threshold': ctrl_cfg['controller']['utilisation_threshold'],
                 'legit': plan['legit'], 'background': plan['background'],
                 'attack': plan['attack'], 'preload': plan['preload'],
+                'attacker': 'ecmp_aware' if getattr(self, 'ecmp_attacker', False) else 'static_routes',
                 'attack_start': attack_start, 'end': attack_start + seconds,
                 'controller_cpu_pct': round(cpu_pct, 2)}
         (run_dir / 'meta.json').write_text(json.dumps(meta, indent=1))
@@ -301,8 +314,11 @@ def main():
     p.add_argument('--scenarios', nargs='+')
     p.add_argument('--runs', type=positive_int)
     p.add_argument('--bursty', action='store_true')
+    p.add_argument('--attacker', choices=['static', 'ecmp'], default='static',
+                   help='ecmp: attack and legitimate pairs cross the target under static AND ECMP routing (revision 2)')
     a = p.parse_args()
     runner = ExperimentRunner(a.config, a.out)
+    runner.ecmp_attacker = a.attacker == 'ecmp'
     try:
         runner.resolve(a.topologies, a.systems, a.scenarios, a.runs)
     except ValueError as e:
